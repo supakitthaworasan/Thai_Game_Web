@@ -9,22 +9,18 @@ const pool = new Pool({
     connectionString: process.env.DATABASE_URL
 });
 
-
 const connectDB = async ()=>{
-
-    try{
+    try {
         const client = await pool.connect();
-        console.log('DATABASE CONNECTED VIA PostgreSQL');
+        console.log("DB connected via Postgre");
         client.release();
-    }catch(err){
-        console.error('DATABASE CONNECTION FAILED:', err.message);
+    } catch (error) {
+        console.error(`Database connection error: ${error.message}`);
         process.exit(1);
-
     }
 }
 
 const disconnectDB = async ()=>{
     await pool.end();
 }
-
 export {pool, connectDB, disconnectDB};
