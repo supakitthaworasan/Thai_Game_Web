@@ -4,7 +4,7 @@ const addMovie = async (req, res)=>{
 
     try {
         const {title, overview, release_year, genres, 
-            runtime, poster_url, created_by} = req.body;
+            runtime, poster_url} = req.body;
 
         // Check if movie already exists
         const existingMovie = await pool.query(
@@ -25,7 +25,7 @@ const addMovie = async (req, res)=>{
             RETURNING id, title, overview, release_year, genres, 
             runtime, poster_url, created_by, created_at`, 
             [title, overview, release_year, genres, 
-            runtime, poster_url, created_by]
+            runtime, poster_url, req.user.id]
         );
 
         const added_movie = result.rows[0];
