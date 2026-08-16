@@ -2,8 +2,8 @@ import express from 'express';
 
 const router = express.Router();
 
-router.get("/hello", (req, res)=>{
-    res.json({message: "Hello"});
+router.post("/addMovie", (req, res)=>{
+    
 });
 
 export default router;

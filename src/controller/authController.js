@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import {pool} from '../config/db.js'
+import { generateToken } from '../utils/generateToken.js';
 
 
 const register = async (req, res)=>{
@@ -32,6 +33,9 @@ const register = async (req, res)=>{
 
         const user = result.rows[0];
 
+        // Generate JWT Token
+        const token = generateToken(user.id, res);
+
         // Send back result to Client
         res.status(201).json({
             status: "success",
@@ -40,7 +44,8 @@ const register = async (req, res)=>{
                     id: user.id,
                     name: user.name,
                     email: user.email
-                }
+                },
+                token
             }
         });
         
@@ -81,14 +86,19 @@ const login = async (req, res)=>{
             });
         }
 
-        return res.status(200).json({
+        // Generate JWT Token 
+        const token = generateToken(user.id, res);
+
+        res.status(200).json({
+            status: "success",
             data:{
                 user:{
                     id: user.id,
                     name: user.name,
                     email: user.email
-                }
-            }
+                },
+                token
+            },
         });
         
     } catch (error) {
@@ -100,4 +110,16 @@ const login = async (req, res)=>{
     }
 }
 
-export {register, login};
+const logout = async (req, res)=>{
+    res.cookie("jwt", "", {
+        httpOnly: true,
+        expire: new Date(0),
+    });
+
+    res.status(200).json({
+        status: "success",
+        message: "Logged out successfully"
+    });
+}
+
+export {register, login, logout};
