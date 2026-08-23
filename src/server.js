@@ -1,5 +1,5 @@
 import express from 'express';
-import {pool, connectDB ,disconnectDB } from './config/db.js'
+import { connectDB ,disconnectDB } from './config/db.js'
 import movieRoutes from './routes/movieRoutes.js'
 import authRoutes from './routes/authRoutes.js'
 

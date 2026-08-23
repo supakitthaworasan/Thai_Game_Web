@@ -69,7 +69,7 @@ const login = async (req, res)=>{
             WHERE email = $1`,[email]
         );
 
-        if (existingEmail === 0){
+        if (existingEmail.rows.length === 0){
             return res.status(401).json({
                 error:"Invalid Email or Password"
             });
@@ -113,7 +113,7 @@ const login = async (req, res)=>{
 const logout = async (req, res)=>{
     res.cookie("jwt", "", {
         httpOnly: true,
-        expire: new Date(0),
+        expires: new Date(0),
     });
 
     res.status(200).json({
