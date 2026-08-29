@@ -27,7 +27,7 @@ startServer();
 
 process.on("unhandledRejection", (err)=>{
     console.error("Unhandled Rejection:", err);
-    server.close(async ()=>{
+    startServer.close(async ()=>{
         await disconnectDB();
         process.exit(1)
     });
@@ -41,7 +41,7 @@ process.on("uncaughtException", async (err)=>{
 
 process.on("SIGTERM", async ()=>{
     console.log("SIGTERM received, shutting down gracefully");
-    server.close(async ()=>{
+    startServer.close(async ()=>{
         await disconnectDB();
         process.exit(0);
     });
@@ -50,7 +50,7 @@ process.on("SIGTERM", async ()=>{
 process.on("SIGINT", async ()=>{
     console.log("SIGINT received, shutting down gracefully");
 
-    server.close(async ()=>{
+    startServer.close(async ()=>{
         await disconnectDB();
         process.exit(0);
     });
