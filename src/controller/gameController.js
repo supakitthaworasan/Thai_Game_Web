@@ -1,57 +1,53 @@
 import { json } from 'express';
 import { pool } from '../config/db.js';
 
-const addMovie = async (req, res) => {
+const addGame = async (req, res) => {
 
     try {
-        const { title, overview, release_year, genres,
-            runtime, poster_url } = req.body;
+        const { game_name, img_game_url, description, price, release_date, publisher_id, developer_id, download_url} = req.body;
 
         // Check if movie already exists
         const existingMovie = await pool.query(
-            `SELECT id from "Movie"
-            WHERE title = $1`, [title]
+            `SELECT game_id from "game"
+            WHERE game_name = $1`, [game_name]
         );
 
         if (existingMovie.rows.length > 0) {
             return res.status(400).json({
-                error: "Movie already exists"
+                error: "Game already exists"
             });
         }
 
         const result = await pool.query(
-            `INSERT INTO "Movie" (title, overview, release_year, genres, 
-            runtime, poster_url, created_by)
-            VALUES($1, $2, $3, $4, $5, $6, $7)
-            RETURNING id, title, overview, release_year, genres, 
-            runtime, poster_url, created_by, created_at`,
-            [title, overview, release_year, genres,
-                runtime, poster_url, req.user.id]
+            `INSERT INTO "game" (game_name, img_game_url, description, price, release_date, publisher_id, developer_id, download_url)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8)
+            RETURNING game_id, game_name, img_game_url, description, price, release_date, publisher_id, developer_id, download_url`,
+            [game_name, img_game_url, description, price, release_date, publisher_id, developer_id, download_url]
         );
 
-        const added_movie = result.rows[0];
+        const added_game = result.rows[0];
 
         // Send back result
         res.status(201).json({
             status: "success",
             data: {
                 movie: {
-                    id: added_movie.id,
-                    title: added_movie.title,
-                    overview: added_movie.overview,
-                    release_year: added_movie.release_year,
-                    genres: added_movie.genres,
-                    runtime: added_movie.runtime,
-                    poster_url: added_movie.poster_url,
-                    created_by: added_movie.created_by,
-                    created_at: added_movie.created_at
+                    id: added_game.game_id,
+                    game_name: added_game.game_name,
+                    img_game_url: added_game.img_game_url,
+                    description: added_game.description,
+                    price: added_game.price,
+                    release_date: added_game.release_date,
+                    publisher_id: added_game.publisher_id,
+                    developer_id: added_game.developer_id,
+                    download_url: added_game.download_url,
                 }
             }
         });
 
 
     } catch (error) {
-        console.error("addMovie error:", error);
+        console.error("addGame error:", error);
 
         res.status(500).json({
             error: "Internal server error"
@@ -60,7 +56,7 @@ const addMovie = async (req, res) => {
 
 };
 
-const deleteMovie = async (req, res) => {
+const deleteGame = async (req, res) => {
     try {
         const result = await pool.query(
             `SELECT * FROM "Movie"
@@ -94,7 +90,7 @@ const deleteMovie = async (req, res) => {
     }
 };
 
-const updateMovie = async (req, res) => {
+const updateGame = async (req, res) => {
     try {
         const { title, overview, release_year, genres, runtime, poster_url } = req.body;
 
@@ -165,7 +161,7 @@ const updateMovie = async (req, res) => {
     }
 }
 
-const getMovie = async (req, res)=>{
+const getGames = async (req, res)=>{
     try {
         const result = await pool.query(`
             SELECT * FROM "Movie"`
@@ -192,4 +188,4 @@ const getMovie = async (req, res)=>{
     }
 }
 
-export { addMovie, deleteMovie, updateMovie, getMovie };
+export { addGame, deleteGame, updateGame, getGames };

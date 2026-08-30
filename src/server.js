@@ -1,6 +1,6 @@
 import express from 'express';
 import { connectDB ,disconnectDB } from './config/db.js'
-import movieRoutes from './routes/movieRoutes.js'
+import gameRoutes from './routes/gameRoutes.js'
 import authRoutes from './routes/authRoutes.js'
 
 
@@ -9,10 +9,10 @@ const app = express();
 //API Routes
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
-app.use("/movies", movieRoutes);
+app.use("/game", gameRoutes);
 app.use("/auth", authRoutes);
 
-const PORT = 5001;
+const PORT = 2001;
 
 const startServer = async ()=>{
     await connectDB();
@@ -56,4 +56,4 @@ process.on("SIGINT", async ()=>{
     });
 });
 
-// http://localhost:5001/movies/hello
+// http://localhost:2001/movies/hello

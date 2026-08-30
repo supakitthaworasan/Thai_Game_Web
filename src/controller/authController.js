@@ -5,12 +5,12 @@ import { generateToken } from '../utils/generateToken.js';
 
 const register = async (req, res)=>{
     try {
-        const {name, email, password} = req.body;
+        const {username, email, password} = req.body;
 
         //Check if user already exists
         const existingUser = await pool.query(
-            `SELECT id
-            FROM "User"
+            `SELECT user_id
+            FROM "users"
             WHERE email = $1`, [email]
         );
 
@@ -23,29 +23,29 @@ const register = async (req, res)=>{
         // Hash Password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
+        const defualt_role = 2;
 
         // Create User
         const result = await pool.query(
-            `INSERT INTO "User" (name, email, password)
-            VALUES($1, $2, $3)
-            RETURNING id, name, email`, [name, email, hashedPassword]
+            `INSERT INTO "users" (username, email, password_hash, role_id)
+            VALUES($1, $2, $3, ${defualt_role})
+            RETURNING username, email, role_id`, [username, email, hashedPassword]
         );
 
         const user = result.rows[0];
 
         // Generate JWT Token
-        const token = generateToken(user.id, res);
+        const token = generateToken(user.user_id, res);
 
         // Send back result to Client
         res.status(201).json({
             status: "success",
             data: {
                 user:{
-                    id: user.id,
-                    name: user.name,
+                    id: user.user_id,
+                    name: user.username,
                     email: user.email
-                },
-                token
+                }
             }
         });
         
@@ -65,7 +65,7 @@ const login = async (req, res)=>{
 
         //Check if Email aleady exists
         const existingEmail = await pool.query(
-            `SELECT id, name, email, password FROM "User"
+            `SELECT user_id, username, email, password_hash FROM "users"
             WHERE email = $1`,[email]
         );
 
@@ -78,7 +78,7 @@ const login = async (req, res)=>{
         const user = existingEmail.rows[0];
 
         //Compare Password
-        const isMatch = await bcrypt.compare(password, user.password)
+        const isMatch = await bcrypt.compare(password, user.password_hash)
 
         if (!isMatch){
             return res.status(401).json({
@@ -87,14 +87,14 @@ const login = async (req, res)=>{
         }
 
         // Generate JWT Token 
-        const token = generateToken(user.id, res);
+        const token = generateToken(user.user_id, res);
 
         res.status(200).json({
             status: "success",
             data:{
                 user:{
-                    id: user.id,
-                    name: user.name,
+                    id: user.user_id,
+                    name: user.username,
                     email: user.email
                 },
                 token
