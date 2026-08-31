@@ -6,13 +6,13 @@ const addGame = async (req, res) => {
     try {
         const { game_name, img_game_url, description, price, release_date, publisher_id, developer_id, download_url} = req.body;
 
-        // Check if movie already exists
-        const existingMovie = await pool.query(
+        // Check if game already exists
+        const existinggame = await pool.query(
             `SELECT game_id from "game"
             WHERE game_name = $1`, [game_name]
         );
 
-        if (existingMovie.rows.length > 0) {
+        if (existinggame.rows.length > 0) {
             return res.status(400).json({
                 error: "Game already exists"
             });
@@ -31,7 +31,7 @@ const addGame = async (req, res) => {
         res.status(201).json({
             status: "success",
             data: {
-                movie: {
+                game: {
                     id: added_game.game_id,
                     game_name: added_game.game_name,
                     img_game_url: added_game.img_game_url,
@@ -59,29 +59,36 @@ const addGame = async (req, res) => {
 const deleteGame = async (req, res) => {
     try {
         const result = await pool.query(
-            `SELECT * FROM "Movie"
-            WHERE id = $1`, [req.params.id],
+            `SELECT * FROM "game"
+            WHERE game_id = $1`, [req.params.id],
         );
 
-        const movieItem = result.rows[0];
+        const roles = await pool.query(
+            `SELECT * FROM "role"
+            WHERE role_name = 'DEV' or role_name = 'ADMIN'`,
+        )
 
-        if (!movieItem) {
-            return res.status(404).json({ error: "Movie not found" });
+        const role = roles.rows; 
+
+        const gameItem = result.rows[0];
+
+        if (!gameItem) {
+            return res.status(404).json({ error: "Game not found" });
         }
 
         //ensure only owner can delete
-        if (movieItem.created_by !== req.user.id) {
+        if (req.user.role_id !== role[0].role_id && req.user.role_id !== role[1].role_id ) {
             return res.status(403).json({
-                error: "Not allowed to delete"
+                error: `Role ${req.user.role_id} Not allowed to delete`
             })
         }
 
         await pool.query(`
-            DELETE FROM "Movie"
-            WHERE id = $1`, [req.params.id]);
+            DELETE FROM "game"
+            WHERE game_id = $1`, [req.params.id]);
 
         res.status(200).json({
-            message: "Movie has been deleted successfully"
+            message: `Game has been deleted successfully by ${req.user.role_id}` 
         });
 
     } catch (error) {
@@ -92,40 +99,49 @@ const deleteGame = async (req, res) => {
 
 const updateGame = async (req, res) => {
     try {
-        const { title, overview, release_year, genres, runtime, poster_url } = req.body;
+        const { game_name, img_game_url, description, price, release_date, publisher_id, developer_id, download_url } = req.body;
 
-        //Find movie
-        const findMovie = await pool.query(`
-        SELECT * FROM "Movie"
-        WHERE id = $1
+        //Find game
+        const findgame = await pool.query(`
+        SELECT * FROM "game"
+        WHERE game_id = $1
         `, [req.params.id]
         );
 
-        const movie = findMovie.rows[0];
+        const game = findgame.rows[0];
 
-        //Check if Movie exists
-        if (!movie) {
+        //Check if game exists
+        if (!game) {
             return res.status(404).json({
-                error: "Movie not found"
+                error: "game not found"
             });
         }
 
+        const roles = await pool.query(
+            `SELECT * FROM "role"
+            WHERE role_name = 'DEV' or role_name = 'ADMIN'`,
+        )
+
+        const role = roles.rows;
+
         //Check ownership
-        if (req.user.id !== movie.created_by) {
+        if (req.user.role_id !== role[0].role_id &&  req.user.role_id !== role[1].role_id) {
             return res.status(403).json({
-                error: "Not allowed"
+                error: `${req.user.role_id} Not allowed`
             });
         }
 
         //Update
         const updateData = {};
 
-        if (title !== undefined) updateData.title = title;
-        if (overview !== undefined) updateData.overview = overview;
-        if (release_year !== undefined) updateData.release_year = release_year;
-        if (genres !== undefined) updateData.genres = genres;
-        if (runtime !== undefined) updateData.runtime = runtime;
-        if (poster_url !== undefined) updateData.poster_url = poster_url;
+        if (game_name !== undefined) updateData.game_name = game_name;
+        if (img_game_url !== undefined) updateData.img_game_url = img_game_url;
+        if (description !== undefined) updateData.description = description;
+        if (price !== undefined) updateData.price = price;
+        if (release_date !== undefined) updateData.release_date = release_date;
+        if (publisher_id !== undefined) updateData.publisher_id = publisher_id;
+        if (developer_id !== undefined) updateData.developer_id = developer_id;
+        if (download_url !== undefined) updateData.download_url = download_url;
  
 
         if (Object.keys(updateData).length === 0) {
@@ -146,12 +162,12 @@ const updateGame = async (req, res) => {
         values.push(req.params.id);
 
 
-        const query = await pool.query(`UPDATE "Movie" SET ${fields.join(",")}, created_at = NOW() WHERE id = $${index} RETURNING *`, values);
+        const query = await pool.query(`UPDATE "game" SET ${fields.join(",")} WHERE game_id = $${index} RETURNING *`, values);
 
         res.status(200).json({
             status: "success",
             data: {
-                Movie: query.rows[0],
+                game: query.rows[0],
             }
         });
     } catch (error) {
@@ -164,24 +180,24 @@ const updateGame = async (req, res) => {
 const getGames = async (req, res)=>{
     try {
         const result = await pool.query(`
-            SELECT * FROM "Movie"`
+            SELECT * FROM "game"`
         );
 
-        const movies = result.rows;
+        const games = result.rows;
         //Check item exists
-        if(movies.length === 0){
-            return res.status(200).json({message: "No Movies"});
+        if(games.length === 0){
+            return res.status(200).json({message: "No game"});
         }
 
         res.status(200).json({
             data:{
-                movies,
+                games,
             }
         });
 
 
     } catch (error) {
-        console.error("GET Movies error", error);
+        console.error("GET game error", error);
         res.status(500).json({
             error:"Internal Server error"
         });

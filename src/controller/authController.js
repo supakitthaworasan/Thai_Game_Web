@@ -35,7 +35,6 @@ const register = async (req, res)=>{
         const user = result.rows[0];
 
         // Generate JWT Token
-        const token = generateToken(user.user_id, res);
 
         // Send back result to Client
         res.status(201).json({
