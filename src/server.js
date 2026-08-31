@@ -59,3 +59,4 @@ process.on("SIGINT", async ()=>{
 // http://localhost:2001/auth/register
 // http://localhost:2001/auth/login
 // http://localhost:2001/auth/logout
+// http://localhost:2001/game/addGame
