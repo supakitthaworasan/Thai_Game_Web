@@ -2,7 +2,9 @@ import express from 'express';
 import { connectDB ,disconnectDB } from './config/db.js'
 import gameRoutes from './routes/gameRoutes.js'
 import authRoutes from './routes/authRoutes.js'
-
+import contributorRoutes from './routes/contributorRoutes.js'
+import genreRoutes from './routes/genreRoutes.js'
+import platformRoutes from './routes/platformRoutes.js'
 
 const app = express();
 
@@ -11,6 +13,9 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.use("/game", gameRoutes);
 app.use("/auth", authRoutes);
+app.use("/contributor", contributorRoutes );
+app.use("/genre", genreRoutes);
+app.use("/platform", platformRoutes);
 
 const PORT = 2001;
 
@@ -56,4 +61,7 @@ process.on("SIGINT", async ()=>{
     });
 });
 
-// http://localhost:2001/movies/hello
+// http://localhost:2001/auth/register
+// http://localhost:2001/auth/login
+// http://localhost:2001/auth/logout
+// http://localhost:2001/game/addGame
