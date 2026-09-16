@@ -1,10 +1,13 @@
 import express from 'express';
-import { addGenre, getGenres, updateGenre, deleteGenre } from '../controller/genreController.js';
+import { addGenre, getGenres, updateGenre, deleteGenre, addGameAndGenre } from '../controller/genreController.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
 import { validateRequest } from '../middleware/validateRequest.js';
 import  {addGameSchema} from '../validators/gameValidator.js'
 
 const router = express.Router();
+
+router.post("/addGNG", addGameAndGenre);
+
 router.use(authMiddleware);
 
 router.get("/getGenre", getGenres);

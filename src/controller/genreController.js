@@ -170,4 +170,57 @@ const getGenres = async (req, res)=>{
     }
 }
 
-export { addGenre, deleteGenre, updateGenre, getGenres };
+const addGameAndGenre = async (req, res) => {
+    try {
+        const { game_id, genre_id } = req.body;
+
+        // 1. ตรวจสอบข้อมูล
+        if (!game_id || !genre_id) {
+            return res.status(400).json({ 
+                error: "Missing game_id or genre_id" 
+            });
+        }
+
+        // 2. Insert ข้อมูลลงตารางเชื่อม
+        // ใช้ ON CONFLICT DO NOTHING ป้องกันระบบพังกรณีมีการผูกข้อมูลคู่นี้ไว้แล้ว
+        const result = await pool.query(
+            `INSERT INTO "game_genre" (game_id, genre_id)
+            VALUES ($1, $2)
+            ON CONFLICT (game_id, genre_id) DO NOTHING
+            RETURNING game_id, genre_id`,
+            [game_id, genre_id]
+        );
+
+        // 3. ตรวจสอบว่ามีข้อมูลถูกเพิ่มจริงหรือไม่
+        if (result.rowCount === 0) {
+            return res.status(400).json({
+                error: "This Game and Genre relationship already exists"
+            });
+        }
+
+        // 4. คืนค่าผลลัพธ์
+        res.status(201).json({
+            status: "success",
+            data: {
+                game_genre: result.rows[0]
+            }
+        });
+
+    } catch (error) {
+        console.error("addGameAndGenre error:", error);
+
+        // ดักจับ Error จาก Foreign Key Constraint (กรณีไม่มี game_id หรือ genre_id ในตารางหลัก)
+        if (error.code === '23503') { 
+            return res.status(404).json({
+                error: "game_id or genre_id does not exist"
+            });
+        }
+
+        res.status(500).json({
+            error: "Internal server error"
+        });
+    }
+};
+
+
+export { addGenre, deleteGenre, updateGenre, getGenres, addGameAndGenre };

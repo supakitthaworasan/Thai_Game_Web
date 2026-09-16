@@ -9,11 +9,9 @@ const router = express.Router();
 
 router.get("/search", searchGames);
 
-router.use(authMiddleware);
-
 router.get("/getGames", getGames);
 
-
+router.use(authMiddleware);
 
 router.post("/addGame", addGame);
 
