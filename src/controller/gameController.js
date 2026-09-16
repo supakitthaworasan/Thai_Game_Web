@@ -1,5 +1,55 @@
 import { json } from 'express';
 import { pool } from '../config/db.js';
+import { parse } from 'dotenv';
+
+const searchGames = async (req, res)=>{
+    try {
+        // รับพารามิเตอร์จาก url query และกำหนดค่าเริ่มต้น
+        const {q = "", page = 1, limit = 10, sortBy = "game_id", sortOrder = "DESC" } = req.query;
+
+        // แปลงชนิดข้อมูลและคำนวน Offset
+        const pageNum = parseInt(page);
+        const limitNum = parseInt(limit);
+        const offset = (pageNum - 1) * limitNum;
+
+        // ป้องกัน SQL Injection ในคำสั่ง ORDER BY
+        // เนื่องจากไม่สามารถใช้ Parameterized Query ($1, $2) กับชื่อคอลัมน์ได้
+        const allowedSortColumns = ['game_id', 'game_name', 'price', 'release_date'];
+        const validSortBy = allowedSortColumns.includes(sortBy) ? sortBy : 'game_id';
+        const validSortOrder = sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+
+        // เตรียมคำค้นหา (ใส่ % ครอบเพื่อค้นหาคำที่อยู่ในประโยค)
+        const searchTerm = `%${q}%`;
+
+        // Query ข้อมูล ใช้ ILIKE สำหรับ String และแปลง price ให้เป็น TEXT ก่อนค้นหา
+        const dataQuery = `SELECT * FROM "game" WHERE game_name ILIKE $1 OR CAST(price AS TEXT) ILIKE $1 ORDER BY ${validSortBy} ${validSortOrder} LIMIT $2 OFFSET $3`;
+
+        // Query จำนวนทั้งหมดที่ตรงกับเงื่อนไข เพื่อนำไปคำนวณจำนวนหน้า
+        const countQuery = `SELECT COUNT(*) FROM "game" WHERE game_name ILIKE $1 OR CAST(price AS TEXT) ILIKE $1`;
+
+        // ใช้ Promise.all เพื่อให้รัน 2 Query พร้อมกัน ลดเวลาประมวลผล
+        const [dataResult, countResult] = await Promise.all([
+            pool.query(dataQuery, [searchTerm, limitNum, offset]),pool.query(countQuery, [searchTerm])
+        ]);
+
+        const totalItems = parseInt(countResult.rows[0].count);
+        const totalPages = Math.ceil(totalItems / limitNum);
+
+        // ส่งคืนข้อมูลพร้อม Meta Data สำหรับ Pagination
+        res.status(200).json({
+            data: dataResult.rows,
+            pagination: {
+                total_items: totalItems,
+                total_pages: totalPages,
+                current_page: pageNum,
+                limit: limitNum
+            }
+        });
+    } catch (error) {
+        console.error("searchGames error:", error);
+        res.status(500).json({error: "Internal server error"})
+    }
+}
 
 const addGame = async (req, res) => {
 
@@ -204,4 +254,4 @@ const getGames = async (req, res)=>{
     }
 }
 
-export { addGame, deleteGame, updateGame, getGames };
+export { addGame, deleteGame, updateGame, getGames, searchGames };

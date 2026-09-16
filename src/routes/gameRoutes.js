@@ -1,13 +1,19 @@
 import express from 'express';
-import { addGame, deleteGame, getGames, updateGame } from '../controller/gameController.js';
+import { addGame, deleteGame, getGames, updateGame, searchGames } from '../controller/gameController.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
 import { validateRequest } from '../middleware/validateRequest.js';
 import  {addGameSchema} from '../validators/gameValidator.js'
 
+
 const router = express.Router();
+
+router.get("/search", searchGames);
+
 router.use(authMiddleware);
 
 router.get("/getGames", getGames);
+
+
 
 router.post("/addGame", addGame);
 
