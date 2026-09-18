@@ -1,12 +1,21 @@
 import express from 'express';
+import cors from 'cors';
 import { connectDB ,disconnectDB } from './config/db.js'
 import gameRoutes from './routes/gameRoutes.js'
 import authRoutes from './routes/authRoutes.js'
 import contributorRoutes from './routes/contributorRoutes.js'
 import genreRoutes from './routes/genreRoutes.js'
 import platformRoutes from './routes/platformRoutes.js'
+import cookieParser from 'cookie-parser';
 
 const app = express();
+
+app.use(cookieParser());
+
+app.use(cors({
+    origin: process.env.FRONTEND_URL, // URL ของ Vite React
+    credentials: true                // อนุญาตการส่ง Cookie และ Header
+}));
 
 //API Routes
 app.use(express.json());
@@ -17,12 +26,12 @@ app.use("/contributor", contributorRoutes );
 app.use("/genre", genreRoutes);
 app.use("/platform", platformRoutes);
 
-const PORT = 2001;
+const PORT = process.env.PORT || 2001;
 
 const startServer = async ()=>{
     await connectDB();
 
-    app.listen(PORT, ()=>{
+    app.listen(PORT, "0.0.0.0", ()=>{
         console.log(`Server running on PORT: ${PORT}`);
     });
 };
