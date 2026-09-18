@@ -230,7 +230,7 @@ const updateGame = async (req, res) => {
 const getGames = async (req, res)=>{
     try {
         const result = await pool.query(`
-            SELECT g.game_id, g.game_name, g.price, g.release_date, pub.contributor_name AS publisher, dev.contributor_name AS developer,
+            SELECT g.game_id, g.game_name, g.price, g.release_date, g.img_game_url, g.description, g.download_url, pub.contributor_name AS publisher, dev.contributor_name AS developer,
             array_remove(array_agg(gen.genre_name), NULL) AS genres
             FROM "game" g
             LEFT JOIN "game_contributor" pub ON g.publisher_id = pub.contributor_id
